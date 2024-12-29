@@ -272,20 +272,11 @@ where
 {
     type Time = duration::Generic<u32>;
 
-    fn start<T>(&mut self, timeout: T)
+    fn start<T>(&mut self, _: T)
     where
         T: Into<Self::Time>,
     {
         self.stop();
-
-        let timeout: Self::Time = timeout.into();
-        let clock = TIM::clock(&self.clocks);
-
-        let ticks = u64::from(clock.integer()).saturating_mul(u64::from(timeout.integer()))
-            * *timeout.scaling_factor();
-
-        let psc = ticks.saturating_sub(1) / (1 << 16);
-        self.tim.set_psc(crate::unwrap!(u16::try_from(psc).ok()));
 
         // Ensure that the below procedure does not create an unexpected interrupt.
         let is_update_interrupt_active = self.is_interrupt_configured(Event::Update);
